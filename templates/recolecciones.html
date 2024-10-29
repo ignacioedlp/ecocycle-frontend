@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recolecciones Pendientes</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="mb-4 text-center">Recolecciones Pendientes</h1>
+
+      <!-- Tabla de recolecciones -->
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Case Bonita ID</th>
+            <th>Material</th>
+            <th>Cantidad Inicial</th>
+            <th>Cantidad Final</th>
+            <th>Estado</th>
+            <th>Recolector</th>
+            <th>Empleado</th>
+            <th>Depósito</th>
+            <th>Fecha de Creación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for recoleccion in recolecciones %}
+          <tr>
+            <td>{{ recoleccion.id }}</td>
+            <td>{{ recoleccion.case_bonita_id }}</td>
+            <td>{{ recoleccion.material }}</td>
+            <td>{{ recoleccion.cantidad_inicial }}</td>
+            <td>{{ recoleccion.cantidad_final }}</td>
+            <td>{{ recoleccion.estado }}</td>
+            <td>{{ recoleccion.recolector }}</td>
+            <td>{{ recoleccion.empleado }}</td>
+            <td>{{ recoleccion.deposito }}</td>
+            <td>{{ recoleccion.created_at }}</td>
+            <td>
+              <!-- Botón para actualizar la recolección -->
+              <a
+                href="#actualizarModal"
+                data-bs-toggle="modal"
+                class="btn btn-primary btn-sm"
+                data-id="{{ recoleccion.case_bonita_id }}"
+              >
+                Actualizar
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal para actualizar la recolección -->
+    <div
+      class="modal fade"
+      id="actualizarModal"
+      tabindex="-1"
+      aria-labelledby="actualizarModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="actualizarForm" method="POST">
+            <div class="modal-header">
+              <h5 class="modal-title" id="actualizarModalLabel">
+                Actualizar Recolección
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="cantidad_final" class="form-label"
+                  >Cantidad Final</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="cantidad_final"
+                  name="cantidad_final"
+                  required
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Manejar el evento de abrir el modal con el case_bonita_id correcto
+        const actualizarModal = document.getElementById("actualizarModal");
+        actualizarModal.addEventListener("show.bs.modal", function (event) {
+          const button = event.relatedTarget;
+          const id = button.getAttribute("data-id");
+
+          // Actualizar el formulario con el case_id correcto
+          const form = actualizarModal.querySelector("form");
+          form.action = "/actualizar-orden/" + id;
+        });
+      });
+    </script>
+  </body>
+</html>

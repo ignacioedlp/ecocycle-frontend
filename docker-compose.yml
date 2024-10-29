@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"  # Mapea el puerto 5000 del contenedor al puerto 5000 de tu máquina host
+    environment:
+      - FLASK_ENV=development  # O producción si es necesario
+    volumes:
+      - .:/app  # Sincroniza el código local con el contenedor
+    restart: always  # Reinicia el contenedor automáticamente si se detiene

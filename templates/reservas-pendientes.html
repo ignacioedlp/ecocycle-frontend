@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reservas Pendientes</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="mb-4 text-center">Reservas Pendientes</h1>
+
+      <!-- Formulario de Filtros -->
+      <form id="filtrosForm" class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label for="material" class="form-label">Material</label>
+          <select id="material" name="material" class="form-select">
+            <option value="" disabled selected>Seleccione un material</option>
+            <!-- Materiales cargados dinámicamente -->
+            {% for material in materiales %}
+            <option value="{{ material.id }}">{{ material.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+          <input
+            type="date"
+            id="fecha_inicio"
+            name="fecha_inicio"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="col-md-3">
+          <label for="fecha_fin" class="form-label">Fecha Fin</label>
+          <input
+            type="date"
+            id="fecha_fin"
+            name="fecha_fin"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+      </form>
+
+      <!-- Tabla de Reservas Pendientes -->
+      <table class="table table-striped table-hover" id="tablaReservas">
+        <thead>
+          <tr>
+            <th>ID Reserva</th>
+            <th>Material</th>
+            <th>Cantidad</th>
+            <th>Fecha Reserva</th>
+            <th>Depósito</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Se llenará dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery para manejar eventos -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        // Manejar el envío del formulario para filtrar
+        $("#filtrosForm").on("submit", function (event) {
+          event.preventDefault();
+
+          // Obtener valores de los filtros
+          var materialId = $("#material").val();
+          var fechaInicio = $("#fecha_inicio").val().split("-").join("-");
+          var fechaFin = $("#fecha_fin").val().split("-").join("-");
+
+          // Construir la URL del endpoint con los parámetros
+          var url = `http://192.168.0.92:8000/api/v1/material/${materialId}/reservas/?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+
+          console.log(url);
+
+          // Hacer la solicitud a la API de Cloud para obtener las reservas filtradas
+          $.ajax({
+            url: url,
+            type: "GET",
+            success: function (response) {
+              // Limpiar la tabla de reservas pendientes
+              $("#tablaReservas tbody").empty();
+
+              // Llenar la tabla con los datos obtenidos
+              $.each(response, function (index, reserva) {
+                var row = `<tr>
+                                <td>${reserva.id}</td>
+                                <td>${reserva.material_id}</td>
+                                <td>${reserva.cantidad}</td>
+                                <td>${reserva.fecha_prevista}</td>
+                                <td></td>
+                                <td><button class="btn btn-success btn-sm tomar-reserva-btn" data-reserva-id="${reserva.id}">Tomar Reserva</button></td>
+                            </tr>`;
+                $("#tablaReservas tbody").append(row);
+              });
+
+              // Agregar funcionalidad a los botones "Tomar Reserva"
+              $(".tomar-reserva-btn").on("click", function () {
+                var reservaId = $(this).data("reserva-id");
+                if (
+                  confirm("¿Estás seguro de que deseas tomar esta reserva?")
+                ) {
+                  $.ajax({
+                    url: "/api/v1/tomar-reserva/" + reservaId, // Ajusta el endpoint según tu API
+                    type: "POST",
+                    success: function (response) {
+                      alert("Reserva tomada con éxito.");
+                      location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                      alert("Error al tomar la reserva.");
+                    },
+                  });
+                }
+              });
+            },
+            error: function (xhr, status, error) {
+              alert(status);
+              alert("Error al obtener las reservas pendientes.");
+            },
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
