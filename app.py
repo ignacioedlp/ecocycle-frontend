@@ -134,7 +134,6 @@ def actualizar_orden(id):
         return 'No autorizado: Necesitas ser Empleado', 403
         
     token = session.get('jwt_token')  # Usa el token de access en la cabecera
-    headers = {'Authorization': f'Bearer {token}'}  # Usa el token en la cabecera
 
     cantidad_final = request.form['cantidad_final']
     
