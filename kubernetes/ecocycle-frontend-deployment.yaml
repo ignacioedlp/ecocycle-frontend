@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecocycle-frontend
+spec:
+  selector:
+    matchLabels:
+      app: ecocycle-frontend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ecocycle-frontend
+    spec:
+      containers:
+        - name: ecocycle-frontend
+          image: ignaciodev11/ecocycle-frontend:tag # Reemplaza con la ruta de tu imagen
+          ports:
+            - containerPort: 5000
+          env:
+            - name: JWT_SECRET_KEY
+              value: "secretkey"
+            - name: API_URL
+              value: "http://192.168.0.92:8000/api/v1"
+            - name: BONITA_URL
+              value: "http://192.168.0.92:8080/bonita"
+            - name: BONITA_USERNAME
+              value: "walter.bates"
+            - name: BONITA_PASS
+              value: bpm

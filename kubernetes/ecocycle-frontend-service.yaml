@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecocycle-frontend-service
+spec:
+  type: LoadBalancer # Para minikube o entornos locales, puedes usar NodePort
+  selector:
+    app: ecocycle-frontend
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
