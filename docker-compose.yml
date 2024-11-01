@@ -1,4 +1,18 @@
+version: '3.8'  # Asegúrate de especificar la versión del archivo
+
 services:
+  db:
+    image: postgres:16.3-alpine3.20
+    container_name: ecocycle__client_db
+    environment:
+      POSTGRES_DB: ecocycle
+      POSTGRES_USER: ecocycleadmin
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Mapea el puerto 5443 de tu máquina host al puerto 5432 del contenedor
+
   web:
     build: .
     ports:
@@ -8,3 +22,8 @@ services:
     volumes:
       - .:/app  # Sincroniza el código local con el contenedor
     restart: always  # Reinicia el contenedor automáticamente si se detiene
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:  # Define el volumen para persistencia de datos
