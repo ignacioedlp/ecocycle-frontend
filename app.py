@@ -56,7 +56,7 @@ def login():
             access_token = tokens.get('access')  # Obtener el token de access
             if access_token:
                 session['jwt_token'] = access_token  # Almacena el token de access en la sesión
-                return redirect(url_for('create_recoleccion'))
+                return redirect(url_for('home'))
             else:
                 return 'Login failed: No access token in response', 401
         else:
@@ -208,6 +208,14 @@ def tomar_reserva(reserva_id):
     
     return jsonify({'message': 'Reserva tomada con éxito'}), 200
 
+@app.route('/home', methods=['GET'])
+def home():
+    return render_template('index.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.secret_key = os.environ.get('JWT_SECRET_KEY')  # Cambia esta clave por una segura
