@@ -1,4 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from models.models import *
+from database import db  
 
 import requests
 import jwt
@@ -15,8 +19,12 @@ from helpers.finish_recoleccion import (
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')  # Cambia esta clave por una segura
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ecocycleadmin:password@db:5432/ecocycle'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 JWT_SECRET_KEY  = os.environ.get('JWT_SECRET_KEY')   # Cambia esta clave por una segura
 API_URL = os.environ.get('API_URL')
+db.init_app(app)
+migrate = Migrate(app, db)
 
 def decode_jwt_token():
     token = session.get('jwt_token')
@@ -210,5 +218,7 @@ def tomar_reserva(reserva_id):
 
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.secret_key = os.environ.get('JWT_SECRET_KEY')  # Cambia esta clave por una segura
     app.run(host='0.0.0.0', port=5000, debug=True)

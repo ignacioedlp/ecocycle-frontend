@@ -6,3 +6,5 @@ python-dotenv
 Flask-SQLAlchemy
 psycopg2-binary
 Flask-Migrate
+flask-sqlalchemy
+marshmallow
