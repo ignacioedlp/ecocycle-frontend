@@ -3,3 +3,6 @@ flask-jwt-extended
 requests
 PyJWT
 python-dotenv
+Flask-SQLAlchemy
+psycopg2-binary
+Flask-Migrate
