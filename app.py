@@ -1,8 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from helpers.authentication_bonita import authentication  # Corrige la importación
+from helpers.tomar_reserva import tomar_reserva_bonita
+from helpers.completar_reserva import completar_reserva_bonita
 from models.models import *
 from database import db  
+from models.models import Material, DepositoComunal, Recoleccion # Asegúrate de importar los modelos
 
 import requests
 import jwt
@@ -16,6 +20,7 @@ from helpers.create_reserva import (
 from helpers.finish_recoleccion import (
     finish_recoleccion
 )
+from helpers.get_reservas import get_reservas
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')  # Cambia esta clave por una segura
@@ -26,24 +31,16 @@ API_URL = os.environ.get('API_URL')
 db.init_app(app)
 migrate = Migrate(app, db)
 
-def decode_jwt_token():
-    token = session.get('jwt_token')
-    if not token:
-        return None, 'No token found'
-    
-    try:
-        print('print', JWT_SECRET_KEY)
-        # Decodificar el token usando la clave secreta y sin verificar la firma (opcional)
-        decoded_token = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
-        
-        # Extraer los grupos del token decodificado
-        groups = decoded_token.get('groups', [])
-        user_id = decoded_token.get('user_id', None)
-        return groups, user_id, None
-    except jwt.ExpiredSignatureError:
-        return None, None, 'Token has expired'
-    except jwt.InvalidTokenError:
-        return None, None, 'Invalid token'
+def get_user_info():
+    user_id = session.get('user_id')
+    user_name = session.get('user_name')
+    role_name = session.get('role_name')
+    print(f"role {role_name}")
+
+    if user_id:
+        return user_id, user_name, role_name
+    else:
+        return None, None, None
 
 # Ruta para login
 @app.route('/login', methods=['GET', 'POST'])
@@ -54,40 +51,27 @@ def login():
         password = request.form['password']
         
         # Realiza la petición al endpoint de login en tu API
-        response = requests.post(f"{API_URL}/login/", json={
-            'username': username, 
-            'password': password
-        })
+        response = authentication(username, password)
         
-        if response.status_code == 200:
-            tokens = response.json()  # Obtener tanto access como refresh token
-            access_token = tokens.get('access')  # Obtener el token de access
-            if access_token:
-                session['jwt_token'] = access_token  # Almacena el token de access en la sesión
-                return redirect(url_for('create_recoleccion'))
-            else:
-                return 'Login failed: No access token in response', 401
+        if response:
+            return redirect(url_for('create_recoleccion'))
         else:
-            return 'Login failed', 401
+            return 'Login failed: No access token in response', 401
+
     return render_template('login.html')
 
 # Ruta protegida para crear recolección
 @app.route('/create-recoleccion', methods=['GET', 'POST'])
 def create_recoleccion():
-    groups, user_id, error = decode_jwt_token()
-    
-    if error:
-        return error, 401
+    user_id, user_name, role_name = get_user_info()
     
     # Verificar si el usuario tiene el grupo 'Recolector'
-    if 'Recolector' not in groups:
+    if role_name != 'Recolector':
         return 'No autorizado: Necesitas ser Recolector', 403
-        
-    token = session.get('jwt_token')  # Usa el token de access en la cabecera
-    headers = {'Authorization': f'Bearer {token}'}  # Usa el token en la cabecera
-    
-    materiales = requests.get(f"{API_URL}/materiales/", headers=headers).json()
-    depositos = requests.get(f"{API_URL}/depositos-comunales/", headers=headers).json()
+            
+    # Obtener materiales y depósitos desde la base de datos local
+    materiales = Material.query.all()  # Consulta para obtener todos los materiales
+    depositos = DepositoComunal.query.all()  # Consulta para obtener todos los depósitos
     
     if request.method == 'POST':
         material_id = request.form['material']
@@ -100,7 +84,7 @@ def create_recoleccion():
             'deposito_id': deposito_id,
             'cantidad': cantidad
         }
-        case_id = add_recoleccion(token, user_id, material_id, cantidad, deposito_id)
+        case_id = add_recoleccion(material_id, cantidad, deposito_id)
         
         if case_id:
             return f"Recolección creada con éxito, su caso es: {case_id}", 200
@@ -112,41 +96,30 @@ def create_recoleccion():
 # Ruta para mostrar la tabla de recolecciones
 @app.route('/recolecciones')
 def mostrar_recolecciones():
-    groups, user_id, error = decode_jwt_token()
-    
-    if error:
-        return error, 401
-    
+    user_id, user_name, role_name = get_user_info()
+
     # Verificar si el usuario tiene el grupo 'Empleado'
-    if 'Empleado' not in groups:
+    if role_name != 'Empleado':
         return 'No autorizado: Necesitas ser Empleado', 403
         
-    token = session.get('jwt_token')  # Usa el token de access en la cabecera
-    headers = {'Authorization': f'Bearer {token}'}  # Usa el token en la cabecera
-
-    # Obtener las órdenes de la API de Cloud
-    ordenes = requests.get(f'{API_URL}/ordenes', headers=headers).json()
+    # Obtener las órdenes de la API de Cloud que esten pendientes
+    recolecciones = Recoleccion.query.filter_by(estado='pendiente').all()
     
-    return render_template('recolecciones.html', recolecciones=ordenes)
+    return render_template('recolecciones.html', recolecciones=recolecciones)
 
 # Ruta para actualizar la orden
 @app.route('/actualizar-orden/<int:id>', methods=['POST'])
 def actualizar_orden(id):
-    groups, user_id, error = decode_jwt_token()
-    
-    if error:
-        return error, 401
-    
+    user_id, user_name, role_name = get_user_info()
+
     # Verificar si el usuario tiene el grupo 'Empleado'
-    if 'Empleado' not in groups:
+    if role_name != 'Empleado':
         return 'No autorizado: Necesitas ser Empleado', 403
         
-    token = session.get('jwt_token')  # Usa el token de access en la cabecera
-
     cantidad_final = request.form['cantidad_final']
     
     # Hacer el PUT a la API de Cloud para actualizar la orden
-    result = finish_recoleccion(token, id, cantidad_final)
+    result = finish_recoleccion(id, cantidad_final)
         
     if result:
         return f"Recolección actualizada con éxito.", 200
@@ -155,25 +128,20 @@ def actualizar_orden(id):
     
 @app.route('/reservar-material', methods=['POST', 'GET'])
 def reservar_material():
-    groups, user_id, error = decode_jwt_token()
-    
-    if error:
-        return error, 401
+    user_id, user_name, role_name = get_user_info()
     
     # Verificar si el usuario tiene el grupo 'Fabricante'
-    if 'Fabricante' not in groups:
+    if role_name != 'Fabricante':
         return 'No autorizado: Necesitas ser Fabricante', 403
         
-    token = session.get('jwt_token')  # Usa el token de access en la cabecera
-    headers = {'Authorization': f'Bearer {token}'}  # Usa el token en la cabecera
-    materiales = requests.get(f"{API_URL}/materiales/", headers=headers).json()
+    materiales = Material.query.all()  # Consulta para obtener todos los materiales
 
     if request.method == 'POST':
         material_id = request.form['material']
         cantidad = request.form['cantidad']
         fecha_prevista = request.form['fecha_reserva']
 
-        case_id = create_reserva(token, cantidad, material_id, fecha_prevista)
+        case_id = create_reserva(cantidad, material_id, fecha_prevista)
         
         if case_id:
             return f"Reserva creada con éxito, su caso es: {case_id}", 200
@@ -185,37 +153,95 @@ def reservar_material():
 
 @app.route('/reservas-pendientes', methods=['POST', 'GET'])
 def reservas_pendientes():
-    groups, user_id, error = decode_jwt_token()
-    
-    if error:
-        return error, 401
+    user_id, user_name, role_name = get_user_info()
     
     # Verificar si el usuario tiene el grupo 'Empleado'
-    if 'Empleado' not in groups:
+    if role_name != 'Empleado':
         return 'No autorizado: Necesitas ser Empleado', 403
         
-    token = session.get('jwt_token')  # Usa el token de access en la cabecera
-    headers = {'Authorization': f'Bearer {token}'}  # Usa el token en la cabecera
-    materiales = requests.get(f"{API_URL}/materiales/", headers=headers).json()
+    materiales = Material.query.all()  # Consulta para obtener todos los materiales
+    depositos = DepositoComunal.query.all()
+    return render_template('reservas-pendientes.html', materiales=materiales, depositos=depositos)
 
-    return render_template('reservas-pendientes.html', materiales=materiales)
+@app.route('/consultar-reservas', methods=['GET'])
+def consultar_reservas():
+    user_id, user_name, role_name = get_user_info()
+    
+    # Verificar si el usuario tiene el grupo 'Empleado'
+    if role_name != 'Empleado':
+        return 'No autorizado: Necesitas ser Empleado', 403
+    
+    material_id = request.args.get('material_id')
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+
+    return get_reservas(fecha_inicio, fecha_fin, material_id)
+
 
 
 @app.route('/tomar-reserva/<int:reserva_id>', methods=['POST'])
 def tomar_reserva(reserva_id):
-    groups, user_id, error = decode_jwt_token()
-
-    if error:
-        return error, 401
+    user_id, user_name, role_name = get_user_info()
     
     # Verificar si el usuario tiene el grupo 'Empleado'
-    if 'Empleado' not in groups:
+    if role_name != 'Empleado':
         return 'No autorizado: Necesitas ser Empleado', 403
     # Aquí procesas la solicitud para tomar la reserva
     # Por ejemplo, puedes actualizar el estado de la reserva en la base de datos
+    deposito_id = request.args.get('deposito_id')
+
+    tomar_reserva_bonita(reserva_id, deposito_id)
     
     return jsonify({'message': 'Reserva tomada con éxito'}), 200
 
+
+@app.route('/completar-reserva/<int:reserva_id>', methods=['POST'])
+def completar_reserva(reserva_id):
+    user_id, user_name, role_name = get_user_info()
+    
+    # Verificar si el usuario tiene el grupo 'Empleado'
+    if role_name != 'Empleado':
+        return 'No autorizado: Necesitas ser Empleado', 403
+
+    # TODO: aca deberiamos verificar el stock y actualizarla en tal caso
+    completar_reserva_bonita(reserva_id)
+
+    
+    return jsonify({'message': 'Reserva tomada con éxito'}), 200
+
+
+@app.route('/api/recolecciones', methods=['POST'])
+def api_create_recoleccion():            
+
+    if request.method == 'POST':
+        material_id = request.form['material_id']
+        deposito_id = request.form['deposito_id']
+        cantidad = request.form['cantidad']
+        
+        # Crear una recolección
+        recoleccion = Recoleccion(material_id=material_id, deposito_id=deposito_id, cantidad_inicial=cantidad)
+        db.session.add(recoleccion)
+        db.session.commit()
+        
+        if recoleccion.id:
+            return {id: recoleccion.id}, 200
+        else:
+            return 'Error al crear la recolección', 400
+
+@app.route('/api/recolecciones/<int:recoleccion_id>', methods=['PUT'])
+def api_finalizar_recoleccion(recoleccion_id):            
+
+    if request.method == 'PUT':
+        cantidad_final = request.form['cantidad_final']
+        
+        recoleccion = Recoleccion.query.get(recoleccion_id)
+        recoleccion.cantidad_final = cantidad_final
+        db.session.commit()
+        
+        if recoleccion.id:
+            return {id: recoleccion.id}, 200
+        else:
+            return 'Error al crear la recolección', 400
 
 if __name__ == '__main__':
     with app.app_context():

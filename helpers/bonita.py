@@ -5,11 +5,9 @@ import os
 
 # Base URL y credenciales
 base_url = os.environ.get('BONITA_URL', 'http://localhost:8080/bonita')
-username = os.environ.get('BONITA_USERNAME', 'walter.bates')
-password = os.environ.get('BONITA_PASS', 'bpm')
 
 # Funciones auxiliares
-def authenticate():
+def authenticate(username, password):
     url = "/loginservice"
     payload = f'username={username}&password={password}'
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -27,6 +25,69 @@ def authenticate():
         else:
             print("No se encontró el token X-Bonita-API-Token en la respuesta.")
             raise KeyError("No se encontró el token X-Bonita-API-Token en la respuesta.")
+    else:
+        print(f"Error de autenticación: {response.status_code}, {response.text}")
+        raise Exception(f"Error de autenticación: {response.status_code}, {response.text}")
+    
+
+def get_user_info():
+    url = "/API/system/session/1"
+    token = session.get('bonita_token')
+    session_id = session.get('session_id')
+
+    headers = {
+        'X-Bonita-API-Token': token,
+        'Cookie': f'JSESSIONID={session_id}; X-Bonita-API-Token={token}'
+    }
+
+    response = requests.get(base_url + url, headers=headers)
+
+    if response.status_code == 200:
+        user_info = response.json()
+        session['user_id'] = user_info['user_id']
+        session['user_name'] = user_info['user_name']
+        print("Información del usuario obtenida y guardada en la sesión.")
+    else:
+        print(f"Error de autenticación: {response.status_code}, {response.text}")
+        raise Exception(f"Error de autenticación: {response.status_code}, {response.text}")
+    
+def get_membership_info():
+    token = session.get('bonita_token')
+    session_id = session.get('session_id')
+    user_id = session.get('user_id')
+    url = f"/API/identity/membership?f=user_id={user_id}"
+    headers = {
+        'X-Bonita-API-Token': token,
+        'Cookie': f'JSESSIONID={session_id}; X-Bonita-API-Token={token}'
+    }
+
+    response = requests.get(base_url + url, headers=headers)
+
+    if response.status_code == 200:
+        user_info = response.json()
+        print(user_info)
+        session['role_id'] = user_info[0]['role_id']
+        print("Información del membership y guardada en la sesión.")
+    else:
+        print(f"Error de autenticación: {response.status_code}, {response.text}")
+        raise Exception(f"Error de autenticación: {response.status_code}, {response.text}")
+    
+def get_role_info():
+    token = session.get('bonita_token')
+    session_id = session.get('session_id')
+    role_id = session.get('role_id')
+    url = f"/API/identity/role/{role_id}"
+    headers = {
+        'X-Bonita-API-Token': token,
+        'Cookie': f'JSESSIONID={session_id}; X-Bonita-API-Token={token}'
+    }
+
+    response = requests.get(base_url + url, headers=headers)
+
+    if response.status_code == 200:
+        user_info = response.json()
+        session['role_name'] = user_info['name']
+        print("Información del role y guardada en la sesión.")
     else:
         print(f"Error de autenticación: {response.status_code}, {response.text}")
         raise Exception(f"Error de autenticación: {response.status_code}, {response.text}")
@@ -112,32 +173,10 @@ def assign_variable_by_task_and_case(case_id, variable_name, variable_value, var
     else:
         return None
 
-def get_user_id_by_username():
+def assign_user_to_task(task_id):
     token = session.get('bonita_token')
     session_id = session.get('session_id')
-    url = f"/API/identity/user?s={username}"
-    headers = {
-        'X-Bonita-API-Token': token,
-        'Cookie': f'JSESSIONID={session_id}; X-Bonita-API-Token={token}'
-    }
-
-    response = requests.get(base_url + url, headers=headers)
-
-    if response.status_code == 200:
-        try:
-            json_data = response.json()
-            if isinstance(json_data, list) and len(json_data) > 0:
-                return json_data[0]['id']
-            else:
-                raise ValueError("La respuesta no contiene tareas asociadas al caseId.")
-        except (ValueError, KeyError) as e:
-            raise ValueError(f"Error al procesar la respuesta JSON: {e}")
-    else:
-        raise Exception(f"Error al obtener el userId: {response.status_code}, {response.text}")
-
-def assign_user_to_task(task_id, user_id):
-    token = session.get('bonita_token')
-    session_id = session.get('session_id')
+    user_id = session.get('user_id')
     url = "/API/bpm/userTask/" + str(task_id)
     headers = {
         'X-Bonita-API-Token': token,
@@ -176,3 +215,25 @@ def complete_task(task_id):
     else:
         print(f"Error al completar la tarea: {response.status_code}, {response.text}")
         raise Exception(f"Error al completar la tarea: {response.status_code}, {response.text}")
+
+def get_variable(case_id, variable_name):
+    token = session.get('bonita_token')
+    session_id = session.get('session_id')
+    url = f"/API/bpm/caseVariable/{case_id}/{variable_name}"
+    headers = {
+        'X-Bonita-API-Token': token,
+        'Cookie': f'JSESSIONID={session_id}; X-Bonita-API-Token={token}'
+    }
+
+    response = requests.get(base_url + url, headers=headers)
+
+    if response.status_code == 200 or response.status_code == 204:
+        if response.content:
+            data = response.json()
+            return data['value']
+        else:
+            return None
+    else:
+        print(f"Error al completar la tarea: {response.status_code}, {response.text}")
+        raise Exception(f"Error al completar la tarea: {response.status_code}, {response.text}")
+    

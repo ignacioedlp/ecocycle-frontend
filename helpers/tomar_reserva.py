@@ -6,16 +6,13 @@ from helpers.bonita import (
 )
 from flask import session
 
-def finish_recoleccion(case_id, cantidad):
+def tomar_reserva_bonita(case_id, deposito_id):
     try:
         # 1. Busco la actividad por caso
         task_id = get_task_by_case(case_id)
 
-        empleado_username = session.get('user_name')
-
         # 2. Asigno las variables de la actividad
-        assign_variable_by_task_and_case(case_id, 'cantidad_final', int(cantidad), 'java.lang.Integer')
-        assign_variable_by_task_and_case(case_id, 'empleado_username', empleado_username, 'java.lang.String')
+        assign_variable_by_task_and_case(case_id, 'deposito_id', deposito_id, 'java.lang.Integer')
 
         # 4. Asigno la actividad al usuario
         assign_user_to_task(task_id)
