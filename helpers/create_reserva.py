@@ -1,45 +1,40 @@
 from helpers.bonita import (
     assign_user_to_task,
     assign_variable_by_task_and_case,
-    authenticate,
     complete_task,
     get_process_id,
     get_task_by_case,
-    get_user_id_by_username, 
     init_process, 
 )
+from flask import session
 
-def create_reserva(token, cantidad, material_id, fecha):
+def create_reserva(cantidad, material_id, fecha):
     try:
-        # 1. Me autentico en Bonita
-        token_bonita, session_id = authenticate()
-
-        # 2. Obtengo el ID del proceso de la orden
+        # 1. Obtengo el ID del proceso de la orden
         process_id = get_process_id('Reserva')
 
-        # 3. Instancio el proceso
+        # 2. Instancio el proceso
         case_id = init_process(process_id)
 
-        # 5. Busco la actividad por caso
+        # 3. Busco la actividad por caso
         task_id = get_task_by_case(case_id)
 
-        # 6. Asigno las variables de la actividad
+        fabricante_username = session.get('user_name')
+
+        # 4. Asigno las variables de la actividad
         assign_variable_by_task_and_case(case_id, 'material_id', material_id, 'java.lang.Integer')
         assign_variable_by_task_and_case(case_id, 'cantidad', int(cantidad), 'java.lang.Integer')
         assign_variable_by_task_and_case(case_id, 'fecha_prevista', fecha, 'java.lang.String')
-        assign_variable_by_task_and_case(case_id, 'token', token, 'java.lang.String')
         assign_variable_by_task_and_case(case_id, 'case_id', case_id, 'java.lang.Integer')
+        assign_variable_by_task_and_case(case_id, 'fabricante_username', fabricante_username, 'java.lang.String')
 
-        # 7. Obtengo el userId del usuario por username
-        user_id = get_user_id_by_username()
+        # 5. Asigno la actividad al usuario
+        assign_user_to_task(task_id)
 
-        # 8. Asigno la actividad al usuario
-        assign_user_to_task(task_id, user_id)
-
-        # 9. Completo la actividad asi avanza el proceso
+        # 6. Completo la actividad asi avanza el proceso
         complete_task(task_id)
 
-        print(f"Proceso de recolección creado con éxito, caso: {case_id}")
+        print(f"Proceso de reserva creado con éxito, caso: {case_id}")
 
         return case_id
     except Exception as e:

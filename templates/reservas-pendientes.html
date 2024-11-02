@@ -59,6 +59,7 @@
         <thead>
           <tr>
             <th>ID Reserva</th>
+            <th>Case ID</th>
             <th>Material</th>
             <th>Cantidad</th>
             <th>Fecha Reserva</th>
@@ -77,6 +78,32 @@
     <!-- jQuery para manejar eventos -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+    <!-- Modal para seleccionar el depósito -->
+    <div class="modal fade" id="depositoModal" tabindex="-1" aria-labelledby="depositoModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="depositoModalLabel">Seleccionar Depósito</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <label for="deposito" class="form-label">Seleccione un depósito</label>
+            <select id="deposito" class="form-select">
+              <option value="" disabled selected>Seleccione un depósito</option>
+              <!-- Aquí puedes cargar los depósitos dinámicamente si es necesario -->
+              <option value="1">Depósito 1</option>
+              <option value="2">Depósito 2</option>
+              <option value="3">Depósito 3</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" id="confirmarReserva">Tomar Reserva</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
       $(document).ready(function () {
         // Manejar el envío del formulario para filtrar
@@ -89,11 +116,9 @@
           var fechaFin = $("#fecha_fin").val().split("-").join("-");
 
           // Construir la URL del endpoint con los parámetros
-          var url = `http://192.168.0.92:8000/api/v1/material/${materialId}/reservas/?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+          // TODO: aca deberiamos crear un endpoint aca en flask para llamar a consultar reservas y que llame a bonita
+          var url = `/consultar-reservas?material_id=${materialId}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
 
-          console.log(url);
-
-          // Hacer la solicitud a la API de Cloud para obtener las reservas filtradas
           $.ajax({
             url: url,
             type: "GET",
@@ -105,11 +130,12 @@
               $.each(response, function (index, reserva) {
                 var row = `<tr>
                                 <td>${reserva.id}</td>
+                                <td>${reserva.case_bonita_id}</td>
                                 <td>${reserva.material_id}</td>
                                 <td>${reserva.cantidad}</td>
                                 <td>${reserva.fecha_prevista}</td>
                                 <td></td>
-                                <td><button class="btn btn-success btn-sm tomar-reserva-btn" data-reserva-id="${reserva.id}">Tomar Reserva</button></td>
+                                <td><button class="btn btn-success btn-sm tomar-reserva-btn" data-reserva-id="${reserva.case_bonita_id}">Tomar Reserva</button></td>
                             </tr>`;
                 $("#tablaReservas tbody").append(row);
               });
@@ -117,19 +143,35 @@
               // Agregar funcionalidad a los botones "Tomar Reserva"
               $(".tomar-reserva-btn").on("click", function () {
                 var reservaId = $(this).data("reserva-id");
-                if (
-                  confirm("¿Estás seguro de que deseas tomar esta reserva?")
-                ) {
-                  $.ajax({
-                    url: "/api/v1/tomar-reserva/" + reservaId, // Ajusta el endpoint según tu API
-                    type: "POST",
-                    success: function (response) {
-                      alert("Reserva tomada con éxito.");
-                      location.reload();
-                    },
-                    error: function (xhr, status, error) {
-                      alert("Error al tomar la reserva.");
-                    },
+                var caseId = $(this).data("case-id");
+                var depositoId = $(this).data("deposito-id");
+
+                if (depositoId) {
+                  // Si ya hay un deposito_id, completar la reserva
+                  completarReserva(caseId);
+                } else {
+                  // Mostrar el modal para seleccionar el depósito
+                  $("#depositoModal").modal("show");
+
+                  // Manejar la confirmación de la reserva
+                  $("#confirmarReserva").off("click").on("click", function () {
+                    var depositoSeleccionado = $("#deposito").val();
+                    if (depositoSeleccionado) {
+                      // Llamar a la función tomar-reserva en app.py
+                      $.ajax({
+                        url: `/tomar-reserva/${reservaId}?deposito_id=${depositoSeleccionado}`, // URL del endpoint
+                        type: "POST", // Método POST para tomar la reserva
+                        success: function (response) {
+                          alert("Reserva tomada con éxito.");
+                          $("#depositoModal").modal("hide"); // Cerrar el modal
+                        },
+                        error: function (xhr, status, error) {
+                          alert("Error al tomar la reserva.");
+                        }
+                      });
+                    } else {
+                      alert("Por favor, seleccione un depósito.");
+                    }
                   });
                 }
               });
@@ -140,6 +182,21 @@
             },
           });
         });
+
+        function completarReserva(caseId) {
+          // Llamar a la función completar-reserva en app.py
+          $.ajax({
+            url: `/completar-reserva/${caseId}`, // URL del endpoint para completar la reserva
+            type: "POST", // Método POST para completar la reserva
+            success: function (response) {
+              alert("Reserva completada con éxito.");
+              // Aquí puedes agregar lógica para actualizar la tabla o la interfaz
+            },
+            error: function (xhr, status, error) {
+              alert("Error al completar la reserva.");
+            }
+          });
+        }
       });
     </script>
   </body>
