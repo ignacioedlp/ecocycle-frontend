@@ -18,15 +18,12 @@ def authenticate(username, password):
         bonita_token = response.cookies.get('X-Bonita-API-Token')
         session_id = response.cookies.get('JSESSIONID')
         if bonita_token:
-            print("Autenticación exitosa.")
             session['bonita_token'] = bonita_token  # Guardar en la sesión de Flask
             session['session_id'] = session_id  # Guardar en la sesión de Flask
             return bonita_token, session_id
         else:
-            print("No se encontró el token X-Bonita-API-Token en la respuesta.")
             raise KeyError("No se encontró el token X-Bonita-API-Token en la respuesta.")
     else:
-        print(f"Error de autenticación: {response.status_code}, {response.text}")
         raise Exception(f"Error de autenticación: {response.status_code}, {response.text}")
     
 
@@ -46,9 +43,7 @@ def get_user_info():
         user_info = response.json()
         session['user_id'] = user_info['user_id']
         session['user_name'] = user_info['user_name']
-        print("Información del usuario obtenida y guardada en la sesión.")
     else:
-        print(f"Error de autenticación: {response.status_code}, {response.text}")
         raise Exception(f"Error de autenticación: {response.status_code}, {response.text}")
     
 def get_membership_info():
@@ -65,11 +60,8 @@ def get_membership_info():
 
     if response.status_code == 200:
         user_info = response.json()
-        print(user_info)
         session['role_id'] = user_info[0]['role_id']
-        print("Información del membership y guardada en la sesión.")
     else:
-        print(f"Error de autenticación: {response.status_code}, {response.text}")
         raise Exception(f"Error de autenticación: {response.status_code}, {response.text}")
     
 def get_role_info():
@@ -87,9 +79,7 @@ def get_role_info():
     if response.status_code == 200:
         user_info = response.json()
         session['role_name'] = user_info['name']
-        print("Información del role y guardada en la sesión.")
     else:
-        print(f"Error de autenticación: {response.status_code}, {response.text}")
         raise Exception(f"Error de autenticación: {response.status_code}, {response.text}")
 
 def get_process_id(process_name):
@@ -163,11 +153,6 @@ def assign_variable_by_task_and_case(case_id, variable_name, variable_value, var
 
     response = requests.put(base_url + url, headers=headers, json=payload)
 
-    if response.status_code == 200 or response.status_code == 204:
-        print(f"Variable {variable_name} asignada correctamente.")
-    else:
-        print(f"Error al asignar la variable {variable_name}: {response.status_code}, {response.text}")
-
     if response.content:
         return response.json()
     else:
@@ -193,7 +178,6 @@ def assign_user_to_task(task_id):
         else:
             return None
     else:
-        print(f"Error al asignar usuario a la tarea: {response.status_code}, {response.text}")
         raise Exception(f"Error al asignar usuario a la tarea: {response.status_code}, {response.text}")
 
 def complete_task(task_id):
@@ -213,7 +197,6 @@ def complete_task(task_id):
         else:
             return None
     else:
-        print(f"Error al completar la tarea: {response.status_code}, {response.text}")
         raise Exception(f"Error al completar la tarea: {response.status_code}, {response.text}")
 
 def get_variable(case_id, variable_name):
@@ -234,6 +217,5 @@ def get_variable(case_id, variable_name):
         else:
             return None
     else:
-        print(f"Error al completar la tarea: {response.status_code}, {response.text}")
         raise Exception(f"Error al completar la tarea: {response.status_code}, {response.text}")
     

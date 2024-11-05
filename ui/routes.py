@@ -12,7 +12,6 @@ def get_user_info():
     user_id = session.get('user_id')
     user_name = session.get('user_name')
     role_name = session.get('role_name')
-    print(f"role {role_name}")
 
     if user_id:
         return user_id, user_name, role_name

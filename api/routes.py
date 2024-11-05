@@ -52,7 +52,6 @@ def tomar_reserva(reserva_id):
         return 'No autorizado: Necesitas ser Empleado', 403
     # Aquí procesas la solicitud para tomar la reserva
     # Por ejemplo, puedes actualizar el estado de la reserva en la base de datos
-    print(request.data)
     data = request.form  # Convertir los datos de bytes a un diccionario
     deposito_id = data['deposito_id']
 
@@ -101,8 +100,6 @@ def consultar_reservas():
     material_id = request.args.get('material_id')
     fecha_inicio = request.args.get('fecha_inicio')
     fecha_fin = request.args.get('fecha_fin')
-
-    print(fecha_inicio, fecha_fin, material_id)
 
     return get_reservas(fecha_inicio, fecha_fin, material_id)
 

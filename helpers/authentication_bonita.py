@@ -12,8 +12,6 @@ def authentication_bonita(username, password):
         get_membership_info()
         get_role_info()
         
-        print(f"Proceso de authenticacion completado")
-
         return True
     except Exception as e:
         raise Exception(f"Error proceso de authenticacion: {str(e)}")

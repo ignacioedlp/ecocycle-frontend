@@ -35,8 +35,6 @@ def add_recoleccion(material_id, cantidad, deposito_id, punto_de_recoleccion_id)
         # 7. Completo la actividad asi avanza el proceso
         complete_task(task_id)
 
-        print(f"Proceso de recolección creado con éxito, caso: {case_id}")
-
         return case_id
     except Exception as e:
         raise Exception(f"Error en el proceso de Bonita: {str(e)}")

@@ -16,8 +16,6 @@ def completar_reserva_bonita(case_id):
         # 5. Completo la actividad asi avanza el proceso
         complete_task(task_id)
 
-        print(f"Proceso de recolección creado con éxito, caso: {case_id}")
-
         return case_id
     except Exception as e:
         raise Exception(f"Error en el proceso de Bonita: {str(e)}")
