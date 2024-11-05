@@ -12,7 +12,7 @@ def tomar_reserva_bonita(case_id, deposito_id):
         task_id = get_task_by_case(case_id)
 
         # 2. Asigno las variables de la actividad
-        assign_variable_by_task_and_case(case_id, 'deposito_id', deposito_id, 'java.lang.Integer')
+        assign_variable_by_task_and_case(case_id, 'deposito_encargado_id', deposito_id, 'java.lang.String')
 
         # 4. Asigno la actividad al usuario
         assign_user_to_task(task_id)

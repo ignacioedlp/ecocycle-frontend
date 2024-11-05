@@ -1,7 +1,6 @@
 from helpers.bonita import (
     assign_user_to_task,
     assign_variable_by_task_and_case,
-    authenticate,
     complete_task,
     get_process_id,
     get_task_by_case,
@@ -9,11 +8,8 @@ from helpers.bonita import (
 )
 from flask import session
 
-def add_recoleccion(material_id, cantidad, deposito_id):
+def add_recoleccion(material_id, cantidad, deposito_id, punto_de_recoleccion_id):
     try:
-        # 1. Me autentico en Bonita
-        authenticate()
-
         # 2. Obtengo el ID del proceso de la orden
         process_id = get_process_id('Recoleccion')
 
@@ -30,6 +26,7 @@ def add_recoleccion(material_id, cantidad, deposito_id):
         assign_variable_by_task_and_case(case_id, 'material_id', material_id, 'java.lang.Integer')
         assign_variable_by_task_and_case(case_id, 'cantidad', int(cantidad), 'java.lang.Integer')
         assign_variable_by_task_and_case(case_id, 'deposito_id', deposito_id, 'java.lang.Integer')
+        assign_variable_by_task_and_case(case_id, 'punto_de_recoleccion_id', punto_de_recoleccion_id, 'java.lang.Integer')
         assign_variable_by_task_and_case(case_id, 'case_id', case_id, 'java.lang.Integer')
 
         # 6 Asigno la actividad al usuario

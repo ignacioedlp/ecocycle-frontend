@@ -12,10 +12,47 @@
   </head>
   <body>
     <div class="container mt-5">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+          <a class="navbar-brand" href="/">Inicio</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="/crear-recoleccion">Crear Recolección</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/reservas-pendientes">Reservas Pendientes</a>
+              </li>
+              <li class="nav-item"></li>
+                <a class="nav-link" href="/reservar-material">Reservar</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/recolecciones">Historial de Recolecciones</a>
+              </li>
+              {% if not user_id %}
+              <li class="nav-item">
+                <a class="nav-link" href="/login">Iniciar Sesión</a>
+              </li>
+              {% endif %}
+              {% if user_id %}
+              <li class="nav-item">
+                <form action="/logout" method="POST" style="display:inline;">
+                  <button type="submit" class="btn btn-danger">Cerrar Sesión</button>
+                </form>
+              </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </nav>
       <h1 class="mb-4 text-center">Recolecciones Pendientes</h1>
 
       <!-- Tabla de recolecciones -->
-      <table class="table table-striped table-hover">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
         <thead>
           <tr>
             <th>ID</th>
@@ -36,13 +73,13 @@
           <tr>
             <td>{{ recoleccion.id }}</td>
             <td>{{ recoleccion.case_bonita_id }}</td>
-            <td>{{ recoleccion.material }}</td>
+            <td>{{ recoleccion.material.name }}</td>
             <td>{{ recoleccion.cantidad_inicial }}</td>
             <td>{{ recoleccion.cantidad_final }}</td>
             <td>{{ recoleccion.estado }}</td>
             <td>{{ recoleccion.recolector }}</td>
             <td>{{ recoleccion.empleado }}</td>
-            <td>{{ recoleccion.deposito }}</td>
+            <td>{{ recoleccion.deposito.name }}</td>
             <td>{{ recoleccion.created_at }}</td>
             <td>
               <!-- Botón para actualizar la recolección -->
@@ -125,7 +162,7 @@
 
           // Actualizar el formulario con el case_id correcto
           const form = actualizarModal.querySelector("form");
-          form.action = "/actualizar-orden/" + id;
+          form.action = "/completar-recoleccion/" + id;
         });
       });
     </script>

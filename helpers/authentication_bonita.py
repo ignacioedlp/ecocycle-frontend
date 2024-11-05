@@ -5,7 +5,7 @@ from helpers.bonita import (
     get_membership_info
 )
 
-def authentication(username, password):
+def authentication_bonita(username, password):
     try:
         authenticate(username, password)
         get_user_info()
