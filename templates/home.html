@@ -1,0 +1,42 @@
+<!-- templates/home.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Inicio</title>
+    <!-- Enlace a Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Bienvenido a Ecocycle</h1>
+        <p>Aquí están los endpoints disponibles:</p>
+        <div class="row">
+            <div class="col-md-4 col-sm-12">
+                {% if not user_id %}
+                  <a class="nav-link btn btn-primary d-block mb-3" href="/login">Iniciar Sesión</a>
+                {% endif %}
+                {% if user_id %}
+                  <form action="/logout" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-danger d-block mb-3">Cerrar Sesión</button>
+                  </form>
+                {% endif %}
+            </div>
+            <div class="col-md-4 col-sm-12">
+                <a href="/recolecciones" class="btn btn-primary d-block mb-3">Ver recolecciones</a>
+                <a href="/crear-recoleccion" class="btn btn-primary d-block mb-3">Crear recoleccion</a>
+            </div>
+            <div class="col-md-4 col-sm-12">
+                <a href="/reservar-material" class="btn btn-primary d-block mb-3">Crear reserva</a>
+                <a href="/reservas-pendientes" class="btn btn-primary d-block mb-3">Consultar reservas</a>
+                <a href="/ingresar-sorteo" class="btn btn-primary d-block mb-3">Ingresar al sorteo</a>
+            </div>
+        </div>
+    </div>
+    <!-- Enlace a Bootstrap JS y dependencias -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

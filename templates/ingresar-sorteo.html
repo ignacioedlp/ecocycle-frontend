@@ -1,0 +1,49 @@
+<!-- templates/ingresar-sorteo.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Ingresar Sorteo</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Generar Token de Sorteo</h2>
+        <form id="sorteoForm">
+            <div class="form-group">
+                <label for="puntoDeRecoleccionId">ID del Punto de Recolección</label>
+                <input type="text" class="form-control" id="puntoDeRecoleccionId" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Generar Token</button>
+        </form>
+        <div id="resultado" class="mt-3"></div>
+    </div>
+
+    <script>
+        document.getElementById('sorteoForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evitar el envío del formulario por defecto
+            const puntoDeRecoleccionId = document.getElementById('puntoDeRecoleccionId').value;
+
+            fetch('/api/sorteo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ punto_de_recoleccion_id: puntoDeRecoleccionId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('resultado').innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                } else {
+                    document.getElementById('resultado').innerHTML = `<div class="alert alert-success">Token: ${data.token}</div>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('resultado').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            });
+        });
+    </script>
+</body>
+</html>

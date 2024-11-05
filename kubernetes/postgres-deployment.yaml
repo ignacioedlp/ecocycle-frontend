@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecocycle-db
+spec:
+  selector:
+    matchLabels:
+      app: ecocycle-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ecocycle-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16.3-alpine3.20
+          env:
+            - name: POSTGRES_DB
+              value: "ecocycle"
+            - name: POSTGRES_USER
+              value: "ecocycleadmin"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: POSTGRES_PASSWORD
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
