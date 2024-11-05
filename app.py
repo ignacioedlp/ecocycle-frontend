@@ -8,7 +8,7 @@ from ui.routes import ui
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')  # Cambia esta clave por una segura
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ecocycleadmin:password@db:5432/ecocycle'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 JWT_SECRET_KEY  = os.environ.get('JWT_SECRET_KEY')   # Cambia esta clave por una segura
 API_URL = os.environ.get('API_URL')

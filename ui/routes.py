@@ -73,12 +73,6 @@ def create_recoleccion():
         punto_de_recoleccion_id =request.form['punto_de_recoleccion']
         
         # Enviar los datos de la recolección a tu API
-        data = {
-            'material_id': material_id,
-            'deposito_id': deposito_id,
-            'cantidad': cantidad,
-            'punto_de_recoleccion_id': punto_de_recoleccion_id
-        }
         case_id = add_recoleccion(material_id, cantidad, deposito_id, punto_de_recoleccion_id)
         
         if case_id:
@@ -157,3 +151,13 @@ def logout():
     session.clear()  # Elimina todos los datos de la sesión
     user_id, user_name, role_name = get_user_info()
     return render_template('home.html', user_id=user_id)
+
+@ui.route('/ingresar-sorteo')
+def sorteo():
+    user_id, user_name, role_name = get_user_info()
+
+        # Verificar si el usuario tiene el grupo 'Empleado'
+    if role_name != 'Punto':
+        return render_template('unauthorized.html'), 403
+    
+    return render_template('ingresar-sorteo.html', user_id=user_id)

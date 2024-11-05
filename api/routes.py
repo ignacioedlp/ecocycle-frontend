@@ -1,18 +1,18 @@
 import json
 from flask import Blueprint, request, jsonify
 from helpers.completar_reserva import completar_reserva_bonita
-from helpers.finish_recoleccion import finish_recoleccion
 from helpers.get_reservas import get_reservas
 from helpers.tomar_reserva import tomar_reserva_bonita
-from models.models import Recoleccion, db, Stock
+from models.models import PuntoDeRecoleccion, Raffle, Recoleccion, db, Stock
 from ui.routes import get_user_info
+import uuid
+import datetime
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
 @api.route('/recolecciones', methods=['POST'])
 def api_create_recoleccion():
     data = json.loads(request.data)  # Convertir los datos de bytes a un diccionario
-    print(data)
     material_id = data['material_id']
     deposito_id = data['deposito_id']
     cantidad = data['cantidad']
@@ -80,7 +80,6 @@ def completar_reserva(reserva_id):
         if stock.stock >= int(float(cantidad)):
             stock.stock -= int(float(cantidad))
             db.session.commit()
-            pass
         else:
             return jsonify({'message': 'No hay stock suficiente'}), 400
     else:
@@ -106,3 +105,43 @@ def consultar_reservas():
     print(fecha_inicio, fecha_fin, material_id)
 
     return get_reservas(fecha_inicio, fecha_fin, material_id)
+
+@api.route('/sorteo', methods=['POST'])
+def generar_token_sorteo():
+    data = request.get_json()
+    punto_de_recoleccion_id = int(data.get('punto_de_recoleccion_id'))
+
+    if not punto_de_recoleccion_id:
+        return jsonify({'error': 'Punto de recolección es requerido'}), 400
+
+    # Verificar si el punto de recolección existe
+    punto = PuntoDeRecoleccion.query.get(punto_de_recoleccion_id)
+    if not punto:
+        return jsonify({'error': 'Punto de recolección no encontrado'}), 404
+
+    # Generar el mes actual en formato 'YYYY-MM'
+    mes_actual = datetime.datetime.utcnow().strftime('%Y-%m')
+
+    # Verificar si ya existe un token para este mes y este punto de recolección
+    sorteo_existente = Raffle.query.filter_by(
+        punto_de_recoleccion_id=punto_de_recoleccion_id,
+        month=mes_actual
+    ).first()
+
+    if sorteo_existente:
+        return jsonify({'token': sorteo_existente.token}), 200
+
+    # Generar un nuevo token
+    nuevo_token = str(uuid.uuid4())
+
+    # Crear una nueva entrada de sorteo
+    nuevo_sorteo = Raffle(
+        punto_de_recoleccion_id=punto_de_recoleccion_id,
+        token=nuevo_token,
+        month=mes_actual
+    )
+
+    db.session.add(nuevo_sorteo)
+    db.session.commit()
+
+    return jsonify({'token': nuevo_token}), 201

@@ -53,6 +53,8 @@ class PuntoDeRecoleccion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
     hide = db.Column(db.Boolean, default=False)
+    address = db.Column(db.String(255), nullable=True)
+    raffles = db.relationship('Raffle', backref='punto_de_recoleccion', lazy=True)
     created_at = db.Column(db.DateTime, default=db.func.now())  
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())  
 
@@ -74,3 +76,13 @@ class Stock(db.Model):
     deposito_id = db.Column(db.Integer, db.ForeignKey('depositos_comunales.id'), nullable=False)
     material_id = db.Column(db.Integer, db.ForeignKey('materiales.id'), nullable=False)
     stock = db.Column(Numeric(10, 2), nullable=False)
+
+class Raffle(db.Model):
+    __tablename__ = 'raffles'
+
+    id = db.Column(db.Integer, primary_key=True)
+    punto_de_recoleccion_id = db.Column(db.Integer, db.ForeignKey('puntos_de_recoleccion.id'), nullable=False)  # Corregido el nombre de la tabla
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    month = db.Column(db.String(7), nullable=False)  # Formato 'YYYY-MM'
+    created_at = db.Column(db.DateTime, default=db.func.now())  
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())  

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+  labels:
+    app: flask-app
+spec:
+  replicas: 1  # Número mínimo de réplicas
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        image: ignaciodev11/ecocycle-web:tag  # Cambia esto a tu imagen de Docker
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "development"  # O "production" según corresponda
+        - name: DATABASE_URL
+          value: postgresql://ecocycleadmin:password@ecocycle-db:5432/ecocycle
+        - name: JWT_SECRET_KEY
+          value: secretkey
+        - name: PORT
+          value: "5000"
+        - name: BONITA_URL
+          value: http://192.168.0.224:8080/bonita
+        - name: API_URL
+          value: http://192.168.0.224:8000/api/v1
+        - name: DATABASE_PASSWORD
