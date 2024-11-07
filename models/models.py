@@ -56,7 +56,8 @@ class PuntoDeRecoleccion(db.Model):
     address = db.Column(db.String(255), nullable=True)
     raffles = db.relationship('Raffle', backref='punto_de_recoleccion', lazy=True)
     created_at = db.Column(db.DateTime, default=db.func.now())  
-    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())  
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    user_id = db.Column(db.Integer, nullable=True, unique=True)  
 
 class Material(db.Model):
     __tablename__ = 'materiales' 

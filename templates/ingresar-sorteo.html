@@ -9,21 +9,17 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h2>Generar Token de Sorteo</h2>
+        <h1>¡Participa en el sorteo de {{ mes_sorteo }}!</h1>
         <form id="sorteoForm">
-            <div class="form-group">
-                <label for="puntoDeRecoleccionId">ID del Punto de Recolección</label>
-                <input type="text" class="form-control" id="puntoDeRecoleccionId" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Generar Token</button>
+            <button type="submit" class="btn btn-primary">Participar</button>
         </form>
         <div id="resultado" class="mt-3"></div>
     </div>
 
     <script>
+        var puntoDeRecoleccionId = {{punto_de_recoleccion_id | tojson}}
         document.getElementById('sorteoForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Evitar el envío del formulario por defecto
-            const puntoDeRecoleccionId = document.getElementById('puntoDeRecoleccionId').value;
 
             fetch('/api/sorteo', {
                 method: 'POST',
