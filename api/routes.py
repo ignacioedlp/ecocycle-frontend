@@ -32,6 +32,7 @@ def api_finalizar_recoleccion(recoleccion_id):
     recoleccion = Recoleccion.query.get(recoleccion_id)
     recoleccion.cantidad_final = cantidad_final
     recoleccion.empleado = data['empleado_username']
+    recoleccion.estado = recoleccion.PROCESADO
 
     stock = Stock.query.filter_by(material_id=recoleccion.material_id, deposito_id=recoleccion.deposito_id).first()
     if stock:
@@ -141,4 +142,4 @@ def generar_token_sorteo():
     db.session.add(nuevo_sorteo)
     db.session.commit()
 
-    return jsonify({'token': nuevo_token}), 201
+    return jsonify({'id': nuevo_sorteo.id}), 201

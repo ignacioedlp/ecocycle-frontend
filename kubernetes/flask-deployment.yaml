@@ -29,7 +29,7 @@ spec:
         - name: PORT
           value: "5000"
         - name: BONITA_URL
-          value: http://192.168.0.224:8080/bonita
+          value: http://192.168.0.248:8080/bonita
         - name: API_URL
-          value: http://192.168.0.224:8000/api/v1
+          value: http://192.168.0.248:8000/api/v1
         - name: DATABASE_PASSWORD

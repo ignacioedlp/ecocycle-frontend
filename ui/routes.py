@@ -4,7 +4,7 @@ from helpers.create_reserva import create_reserva
 from helpers.finish_recoleccion import finish_recoleccion
 from helpers.get_reservas import get_reservas
 from helpers.tomar_reserva import tomar_reserva_bonita
-from models.models import Material, DepositoComunal, Recoleccion, PuntoDeRecoleccion, Stock
+from models.models import Material, DepositoComunal, Raffle, Recoleccion, PuntoDeRecoleccion, Stock
 from helpers.add_recoleccion import add_recoleccion
 from helpers.authentication_bonita import authentication_bonita
 from datetime import datetime
@@ -156,14 +156,14 @@ def logout():
 def sorteo():
     user_id, user_name, role_name = get_user_info()
 
-        # Verificar si el usuario tiene el grupo 'Empleado'
-    print(f"user_id: {user_id}")
     if role_name != 'Punto':
         return render_template('unauthorized.html'), 403
+    
     punto_de_recoleccion = PuntoDeRecoleccion.query.filter_by(user_id = user_id).first()
-    print(f"punto: {punto_de_recoleccion}")
+
     if punto_de_recoleccion:
         mes_sorteo = datetime.now().strftime("%B")
-        return render_template("ingresar-sorteo.html", mes_sorteo=mes_sorteo, punto_de_recoleccion_id = punto_de_recoleccion.id)
+        ya_participa = Raffle.query.filter_by(punto_de_recoleccion_id=punto_de_recoleccion.id, month=datetime.now().strftime("%Y-%m")).first()
+        return render_template("ingresar-sorteo.html", mes_sorteo=mes_sorteo, punto_de_recoleccion_id = punto_de_recoleccion.id, ya_participa=ya_participa)
     else:
         return render_template('unauthorized.html'), 403

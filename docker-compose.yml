@@ -16,9 +16,13 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"  # Mapea el puerto 5000 del contenedor al puerto 5000 de tu máquina host
+      - "5001:5000"  # Mapea el puerto 5000 del contenedor al puerto 5000 de tu máquina host
     environment:
       - FLASK_ENV=development  # O producción si es necesario
+      - BONITA_URL=http://163.10.140.196:8080/bonita
+      - JWT_SECRET_KEY=secretkey
+      - API_URL=http://163.10.140.196:8000/api/v1
+      - DATABASE_URL=postgresql://ecocycleadmin:password@db:5432/ecocycle
     volumes:
       - .:/app  # Sincroniza el código local con el contenedor
     restart: always  # Reinicia el contenedor automáticamente si se detiene
