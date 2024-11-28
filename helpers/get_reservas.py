@@ -19,6 +19,8 @@ def get_reservas(fecha_inicio, fecha_fin, material_id):
         # 3. Instancio el proceso
         case_id = init_process(process_id)
 
+        time.sleep(2)
+
         if not case_id:
             raise Exception("Error al instanciar el proceso")
 

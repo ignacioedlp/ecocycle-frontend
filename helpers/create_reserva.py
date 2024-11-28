@@ -7,6 +7,7 @@ from helpers.bonita import (
     init_process, 
 )
 from flask import session
+import time
 
 def create_reserva(cantidad, material_id, fecha):
     try:
@@ -18,6 +19,8 @@ def create_reserva(cantidad, material_id, fecha):
 
         if not case_id:
             raise Exception("Error al instanciar el proceso")
+
+        time.sleep(2)
 
         # 3. Busco la actividad por caso
         task_id = get_task_by_case(case_id)

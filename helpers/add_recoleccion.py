@@ -7,6 +7,7 @@ from helpers.bonita import (
     init_process, 
 )
 from flask import session
+import time
 
 def add_recoleccion(material_id, cantidad, deposito_id, punto_de_recoleccion_id):
     try:
@@ -16,8 +17,7 @@ def add_recoleccion(material_id, cantidad, deposito_id, punto_de_recoleccion_id)
         # 3. Instancio el proceso
         case_id = init_process(process_id)
 
-        if not case_id:
-            raise Exception("Error al instanciar el proceso")
+        time.sleep(2)
 
         # 4. Busco la actividad por caso
         task_id = get_task_by_case(case_id)
