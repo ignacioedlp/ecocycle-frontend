@@ -16,6 +16,9 @@ def create_reserva(cantidad, material_id, fecha):
         # 2. Instancio el proceso
         case_id = init_process(process_id)
 
+        if not case_id:
+            raise Exception("Error al instanciar el proceso")
+
         # 3. Busco la actividad por caso
         task_id = get_task_by_case(case_id)
 

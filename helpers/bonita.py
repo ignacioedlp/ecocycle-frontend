@@ -2,6 +2,7 @@ from flask import session
 import requests
 from decimal import Decimal
 import os
+from datetime import datetime, timedelta
 
 # Base URL y credenciales
 base_url = os.environ.get('BONITA_URL', 'http://localhost:8080/bonita')
@@ -20,6 +21,8 @@ def authenticate(username, password):
         if bonita_token:
             session['bonita_token'] = bonita_token  # Guardar en la sesión de Flask
             session['session_id'] = session_id  # Guardar en la sesión de Flask
+            # Expiracion en 30 minutos, 
+            session['expiration'] = (datetime.utcnow() + timedelta(minutes=30)).isoformat()
             return bonita_token, session_id
         else:
             raise KeyError("No se encontró el token X-Bonita-API-Token en la respuesta.")
